@@ -1,7 +1,7 @@
 DNSClient
 =========
 
-DNS Client for Spark
+DNS Client for Spark. 
 
 
 Original code from Arduino Ethernet library, ported for use on Spark Core
@@ -12,4 +12,6 @@ when endPacket is called
 
 Example inluded, change the dnsServerIP to whatever DNS server you want to use
 and change serverName to the place you want to look up.
+
+Thanks to everyone who helped make this work
 
