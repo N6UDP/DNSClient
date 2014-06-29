@@ -1,6 +1,11 @@
 // Arduino DNS client for WizNet5100-based Ethernet shield
 // (c) Copyright 2009-2010 MCQN Ltd.
 // Released under Apache License, version 2.0
+//
+// Ported for use on Spark Core By Chris Huitema
+
+
+
 
 #include "application.h"
 
@@ -135,7 +140,7 @@ int DNSClient::getHostByName(const char* aHostname, IPAddress& aResult)
     {
         // Try up to three times
         int retries = 0;
-//        while ((retries < 3) && (ret <= 0))
+        while ((retries < 3) && (ret <= 0))
         {
             // Send DNS request
             ret = iUdp.beginPacket(iDNSServer, DNS_PORT);
@@ -154,7 +159,7 @@ int DNSClient::getHostByName(const char* aHostname, IPAddress& aResult)
                         ret = TIMED_OUT;
                         while ((wait_retries < 3) && (ret == TIMED_OUT))
                         {
-                            ret = ProcessResponse(15000, aResult);
+                            ret = ProcessResponse(aResult);
                             wait_retries++;
                         }
                     }
@@ -170,7 +175,7 @@ int DNSClient::getHostByName(const char* aHostname, IPAddress& aResult)
     return ret;
 }
 
-uint16_t DNSClient::BuildRequest(const char* aName)
+uint32_t DNSClient::BuildRequest(const char* aName)
 {
     // Build header
     //                                    1  1  1  1  1  1
@@ -192,24 +197,28 @@ uint16_t DNSClient::BuildRequest(const char* aName)
     // some of this header
     iRequestId = millis(); // generate a random ID
     uint16_t twoByteBuffer;
-                
+         
     // FIXME We should also check that there's enough space available to write to, rather
     // FIXME than assume there's enough space (as the code does at present)
     iUdp.write((uint8_t*)&iRequestId, sizeof(iRequestId));
+    
 
     twoByteBuffer = htons(QUERY_FLAG | OPCODE_STANDARD_QUERY | RECURSION_DESIRED_FLAG);
     iUdp.write((uint8_t*)&twoByteBuffer, sizeof(twoByteBuffer));
-
+        
     twoByteBuffer = htons(1);  // One question record
     iUdp.write((uint8_t*)&twoByteBuffer, sizeof(twoByteBuffer));
-
+    
     twoByteBuffer = 0;  // Zero answer records
     iUdp.write((uint8_t*)&twoByteBuffer, sizeof(twoByteBuffer));
-
+    
     iUdp.write((uint8_t*)&twoByteBuffer, sizeof(twoByteBuffer));
     // and zero additional records
+
+    
     iUdp.write((uint8_t*)&twoByteBuffer, sizeof(twoByteBuffer));
 
+    
     // Build question
     const char* start =aName;
     const char* end =start;
@@ -229,8 +238,11 @@ uint16_t DNSClient::BuildRequest(const char* aName)
             // Write out the size of this section
             len = end-start;
             iUdp.write(&len, sizeof(len));
+
+            
             // And then write out the section
             iUdp.write((uint8_t*)start, end-start);
+          
         }
         start = end+1;
     }
@@ -239,40 +251,44 @@ uint16_t DNSClient::BuildRequest(const char* aName)
     // terminate it with a zero-length section
     len = 0;
     iUdp.write(&len, sizeof(len));
+
+            
     // Finally the type and class of question
     twoByteBuffer = htons(TYPE_A);
     iUdp.write((uint8_t*)&twoByteBuffer, sizeof(twoByteBuffer));
 
+
     twoByteBuffer = htons(CLASS_IN);  // Internet class of question
     iUdp.write((uint8_t*)&twoByteBuffer, sizeof(twoByteBuffer));
+
     // Success!  Everything buffered okay
     return 1;
 }
 
 
-uint16_t DNSClient::ProcessResponse(uint16_t aTimeout, IPAddress& aAddress)
+uint32_t DNSClient::ProcessResponse(IPAddress& aAddress)
 {
     uint32_t startTime = millis();
-
+    
     // Wait for a response packet
     while(iUdp.parsePacket() <= 0)
     {
-        if((millis() - startTime) > aTimeout)
+        if((millis() - startTime) >= 5000){
             return TIMED_OUT;
+        }
         delay(50);
     }
-
+    
     // We've had a reply!
     // Read the UDP header
     uint8_t header[DNS_HEADER_SIZE]; // Enough space to reuse for the DNS header
     // Check that it's a response from the right server and the right port
-    if ( (iDNSServer != iUdp.remoteIP()) || 
-        (iUdp.remotePort() != DNS_PORT) )
+    if ( (iDNSServer != iUdp.remoteIP()) || (iUdp.remotePort() != DNS_PORT) )
     {
         // It's not from who we expected
         return INVALID_SERVER;
     }
-
+    
     // Read through the rest of the response
     if (iUdp.available() < DNS_HEADER_SIZE)
     {
@@ -289,6 +305,7 @@ uint16_t DNSClient::ProcessResponse(uint16_t aTimeout, IPAddress& aAddress)
         iUdp.flush();
         return INVALID_RESPONSE;
     }
+    
     // Check for any errors in the response (or in our request)
     // although we don't do anything to get round these
     if ( (header_flags & TRUNCATION_FLAG) || (header_flags & RESP_MASK) )

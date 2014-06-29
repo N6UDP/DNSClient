@@ -1,6 +1,8 @@
 // Arduino DNS client for WizNet5100-based Ethernet shield
 // (c) Copyright 2009-2010 MCQN Ltd.
 // Released under Apache License, version 2.0
+//
+// Ported for use on Spark Core By Chris Huitema
 
 
 #include "myUDP.h"
@@ -33,13 +35,14 @@ public:
     int getHostByName(const char* aHostname, IPAddress& aResult);
 
 protected:
-    uint16_t BuildRequest(const char* aName);
-    uint16_t ProcessResponse(uint16_t aTimeout, IPAddress& aAddress);
+    uint32_t BuildRequest(const char* aName);
+    uint32_t ProcessResponse(IPAddress& aAddress);
 
     IPAddress iDNSServer;
     uint16_t iRequestId;
     myUDP iUdp;
+    
 };
 
-#endif
 
+#endif
