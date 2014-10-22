@@ -1,6 +1,6 @@
 
 
-#include "DNSClient.h"  //include the Library
+#include "dnsclient.h"  //include the Library
 
 
 IPAddress dnsServerIP(8,8,8,8);  			//Set the DNS server to use for the lookup

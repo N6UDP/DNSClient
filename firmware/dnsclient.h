@@ -7,8 +7,8 @@
 
 #include "myUDP.h"
 
-#ifndef DNSClient_h
-#define DNSClient_h
+#ifndef dnsclient_h
+#define dnsclient_h
 
 
 

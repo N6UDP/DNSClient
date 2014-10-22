@@ -9,7 +9,7 @@
 
 #include "application.h"
 
-#include "DNSClient.h"
+#include "dnsclient.h"
 
 
 #define SOCKET_NONE	255
