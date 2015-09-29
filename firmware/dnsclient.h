@@ -7,7 +7,7 @@
 
 #ifndef dnsclient_h
 #define dnsclient_h
-
+#include "application.h"
 
 
 class DNSClient
