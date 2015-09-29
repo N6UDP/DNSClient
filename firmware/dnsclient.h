@@ -5,8 +5,6 @@
 // Ported for use on Spark Core By Chris Huitema
 
 
-#include "myUDP.h"
-
 #ifndef dnsclient_h
 #define dnsclient_h
 
@@ -40,7 +38,7 @@ protected:
 
     IPAddress iDNSServer;
     uint16_t iRequestId;
-    myUDP iUdp;
+    UDP iUdp;
     
 };
 
